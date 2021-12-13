@@ -1,4 +1,4 @@
-CREATE TABLE game_stats(
+CREATE TABLE chess_game(
     id varchar(10) not null,
     rated varchar(6) not null,
     created_at varchar(50) not null,

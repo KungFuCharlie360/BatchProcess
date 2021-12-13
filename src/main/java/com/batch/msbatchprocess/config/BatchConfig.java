@@ -1,5 +1,6 @@
 package com.batch.msbatchprocess.config;
 
+import com.batch.msbatchprocess.exception.BatchException;
 import com.batch.msbatchprocess.model.GameStats;
 import com.batch.msbatchprocess.processor.GameStatsProcessor;
 import com.batch.msbatchprocess.processor.JobCompletionNotificationListener;
@@ -11,9 +12,8 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.data.RepositoryItemWriter;
+import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -61,6 +61,7 @@ public class BatchConfig {
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<GameStats>() {{
                     setTargetType(GameStats.class);
                 }})
+                .linesToSkip(1)
                 .build();
     }
 
@@ -68,32 +69,15 @@ public class BatchConfig {
     public GameStatsProcessor processor() {
         return new GameStatsProcessor();
     }
-
     @Bean
-    public JdbcBatchItemWriter<GameStats> writer(DataSource dataSource) {
-        log.info("At writer");
-        return new JdbcBatchItemWriterBuilder<GameStats>()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO game_stats (" + ApplicationConstants.ID + ","+
-                        ApplicationConstants.RATED + "," +
-                        ApplicationConstants.CREATEDAT + "," +
-                        ApplicationConstants.LATSMOVEAT + "," +
-                        ApplicationConstants.TURNS + "," +
-                        ApplicationConstants.VICTORY_STATUS +  "," +
-                        ApplicationConstants.WINNER +  "," +
-                        ApplicationConstants.INCREMENTMODE +  "," +
-                        ApplicationConstants.WHITEID +  "," +
-                        ApplicationConstants.WHITERATING +  "," +
-                        ApplicationConstants.BLACKID +  "," +
-                        ApplicationConstants.BLACKRATING +  "," +
-                        ApplicationConstants.MOVES + "," +
-                        ApplicationConstants.OPENINGECO + "," +
-                        ApplicationConstants.OPENINGNAME + "," +
-                        ApplicationConstants.OPENINGPLY +
-                        ") VALUES(:id, :rated, :createdAt, :lastMoveAt, :turns, :victoryStatus, :winner, :incrementCode, :whiteId, :whiteRating, :blackId, :blackRating, :moves, :openingEco, :openingName, :openingPly)")
-                .dataSource(dataSource)
+    public RepositoryItemWriter<GameStats> gameWriter(DataSource dataSource) {
+        log.info("Using repository Writer");
+        return new RepositoryItemWriterBuilder<GameStats>()
+                .repository(gameRepository)
+                .methodName("save")
                 .build();
     }
+
 
     @Bean
     public Job importJob(JobCompletionNotificationListener listener, Step step1) {
@@ -106,14 +90,18 @@ public class BatchConfig {
                 .build();
     }
 
+
     @Bean
-    public Step step(JdbcBatchItemWriter<GameStats> writer) {
+    public Step step(RepositoryItemWriter<GameStats> writer) {
         log.info("At step");
         return stepBuilderFactory.get("step")
                 .<GameStats, GameStats> chunk(100)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer)
+                .faultTolerant()
+                .skipLimit(1)
+                .skip(BatchException.class)
                 .build();
     }
 }
