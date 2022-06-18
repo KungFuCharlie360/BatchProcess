@@ -14,6 +14,7 @@ public class GameStatsProcessor implements ItemProcessor<GameStats, GameStats> {
 
     @Override
     public GameStats process(GameStats gameStats) throws Exception {
+        log.info(gameStats.toString());
         gameRepository.findById(gameStats.getId()).map(existingGame -> {
             log.info("At processor -- found existing game");
             return existingGame;

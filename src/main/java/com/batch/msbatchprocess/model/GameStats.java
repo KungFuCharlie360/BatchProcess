@@ -26,7 +26,7 @@ public class GameStats {
     private String createdAt;
     @Column(name = "last_move_at")
     private String lastMoveAt;
-    private BigInteger turns;
+    private String turns;
     @Column(name = "victory_status")
     private String victoryStatus;
     private String winner;
@@ -47,4 +47,6 @@ public class GameStats {
     private String openingName;
     @Column(name = "opening_ply")
     private String openingPly;
+//    @Column(name = "updated_at")
+//    private Timestamp updatedAt;
 }

@@ -15,5 +15,6 @@ CREATE TABLE chess_game(
     opening_eco varchar(4) not null,
     opening_name varchar(255) not null,
     opening_ply bigint(4) not null,
+    updated_at timestamp not null,
     CONSTRAINT pk_game_stats_id PRIMARY KEY(id)
  );

@@ -40,7 +40,7 @@ public class BatchConfig {
         log.info("At reader");
         return new FlatFileItemReaderBuilder<GameStats>()
                 .name("chessReader")
-                .resource(new ClassPathResource("games.csv"))
+                .resource(new ClassPathResource("games_error.csv"))
                 .delimited()
                 .names(ApplicationConstants.ID,
                         ApplicationConstants.RATED,
@@ -80,12 +80,12 @@ public class BatchConfig {
 
 
     @Bean
-    public Job importJob(JobCompletionNotificationListener listener, Step step1) {
+    public Job importJob(JobCompletionNotificationListener listener, Step step) {
         log.info("At import job");
         return jobBuilderFactory.get("importJob")
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .flow(step1)
+                .flow(step)
                 .end()
                 .build();
     }
@@ -95,7 +95,7 @@ public class BatchConfig {
     public Step step(RepositoryItemWriter<GameStats> writer) {
         log.info("At step");
         return stepBuilderFactory.get("step")
-                .<GameStats, GameStats> chunk(100)
+                .<GameStats, GameStats> chunk(1)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer)
