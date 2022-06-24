@@ -20,6 +20,7 @@ import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 
 import javax.sql.DataSource;
@@ -27,6 +28,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableBatchProcessing
 @Slf4j
+@Profile("BatchProcess")
 public class BatchConfig {
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
